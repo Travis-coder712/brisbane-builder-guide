@@ -26,6 +26,10 @@ OUT.mkdir(parents=True, exist_ok=True)
 
 
 def dump(filename: str, data):
+    # Don't overwrite existing file with empty data — keep last good snapshot
+    if not data and (OUT / filename).exists():
+        print(f"  skipped {filename} (no new data, keeping existing)")
+        return
     path = OUT / filename
     path.write_text(json.dumps(data, default=str), encoding="utf-8")
     print(f"  wrote {filename} ({path.stat().st_size // 1024}KB)")
