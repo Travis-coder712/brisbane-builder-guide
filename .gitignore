@@ -1,2 +1,9 @@
 node_modules/
 dist/
+backend/nem_data.db
+backend/__pycache__/
+backend/analyzers/__pycache__/
+backend/processors/__pycache__/
+*.pyc
+.env
+
