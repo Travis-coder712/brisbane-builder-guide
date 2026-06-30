@@ -1,8 +1,11 @@
-name: Deploy Brisbane Builder Guide to GitHub Pages
+name: Build and deploy NEM Bid Analyser to GitHub Pages
 
 on:
   push:
     branches: [main]
+  schedule:
+    # 21:00 UTC = 07:00 AEST — AEMO publishes previous day's data ~05:00 AEST
+    - cron: '0 21 * * *'
   workflow_dispatch:
 
 permissions:
@@ -20,16 +23,30 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # ── Python data pipeline ─────────────────────────────────────────────────
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install Python dependencies
+        run: pip install -r backend/requirements.txt
+
+      - name: Download NEMWeb data and build static JSON
+        run: python scripts/build_static_data.py
+
+      # ── Frontend build ───────────────────────────────────────────────────────
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
           cache-dependency-path: package-lock.json
 
-      - name: Install dependencies
+      - name: Install Node dependencies
         run: npm ci
 
-      - name: Build
+      - name: Build frontend
         run: npm run build
 
       - name: Setup Pages

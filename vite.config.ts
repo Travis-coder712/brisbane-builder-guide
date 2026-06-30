@@ -14,9 +14,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'robots.txt'],
       manifest: {
-        name: 'Brisbane Builder Guide — Choose Your Renovator',
-        short_name: 'Builders',
-        description: 'A practical guide to selecting, vetting and budgeting a Brisbane home builder for renovations',
+        name: 'NEM Bid Analyser',
+        short_name: 'NEM Bids',
+        description: 'Australian National Electricity Market bid analysis — NSW & VIC large generators',
         theme_color: '#0f1a2b',
         background_color: '#0f1a2b',
         display: 'standalone',
