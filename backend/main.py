@@ -139,7 +139,7 @@ def get_prices(
         WHERE region_id = ?
           AND substr(settlement_date,1,10) LIKE ?
         ORDER BY settlement_date
-    """, (region, d.strftime("%Y/%m/%d") + "%")).fetchall()
+    """, (region, d.strftime("%Y-%m-%d") + "%")).fetchall()
     conn.close()
     return _rows_to_dicts(rows)
 
@@ -166,7 +166,7 @@ def get_price_summary(
           AND substr(settlement_date,1,10) BETWEEN ? AND ?
         GROUP BY trading_date
         ORDER BY trading_date
-    """, (region, start.strftime("%Y/%m/%d"), end.strftime("%Y/%m/%d"))).fetchall()
+    """, (region, start.strftime("%Y-%m-%d"), end.strftime("%Y-%m-%d"))).fetchall()
     conn.close()
     return _rows_to_dicts(rows)
 
@@ -252,7 +252,7 @@ def get_bids(
           AND substr(settlement_date,1,10) LIKE ?
         ORDER BY offer_datetime DESC
         LIMIT 1
-    """, (duid, d.strftime("%Y/%m/%d") + "%")).fetchone()
+    """, (duid, d.strftime("%Y-%m-%d") + "%")).fetchone()
 
     avail_history = conn.execute("""
         SELECT offer_datetime, max_avail,
@@ -262,7 +262,7 @@ def get_bids(
         WHERE duid = ? AND bid_type = 'ENERGY'
           AND substr(settlement_date,1,10) LIKE ?
         ORDER BY offer_datetime
-    """, (duid, d.strftime("%Y/%m/%d") + "%")).fetchall()
+    """, (duid, d.strftime("%Y-%m-%d") + "%")).fetchall()
 
     conn.close()
 

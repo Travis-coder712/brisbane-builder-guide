@@ -30,9 +30,12 @@ log = logging.getLogger(__name__)
 PRICE_SETTER_TOLERANCE = 0.01  # $/MWh rounding tolerance
 
 
-def compute_unit_day(trading_date: date, duid: str) -> dict | None:
+def compute_unit_day(trading_date, duid: str) -> dict | None:
     """Compute all success metrics for one unit on one trading day."""
-    date_str = trading_date.strftime("%Y/%m/%d")
+    if hasattr(trading_date, 'isoformat'):
+        date_str = trading_date.isoformat()
+    else:
+        date_str = str(trading_date)
     conn = get_connection()
 
     meta = DUID_MAP.get(duid)
@@ -55,9 +58,9 @@ def compute_unit_day(trading_date: date, duid: str) -> dict | None:
           ON dp.settlement_date = dus.settlement_date
          AND dp.region_id = ?
         WHERE dus.duid = ?
-          AND substr(dus.settlement_date, 1, 10) LIKE ?
+          AND substr(dus.settlement_date, 1, 10) = ?
         ORDER BY dus.settlement_date
-    """, (region, duid, trading_date.strftime("%Y/%m/%d") + "%")).fetchall()
+    """, (region, duid, date_str)).fetchall()
 
     # Also pull bid data for price-setter cross-check
     bid_row = conn.execute("""
@@ -65,19 +68,19 @@ def compute_unit_day(trading_date: date, duid: str) -> dict | None:
                price_band6, price_band7, price_band8, price_band9, price_band10
         FROM bid_price_band
         WHERE duid = ? AND bid_type = 'ENERGY'
-          AND substr(settlement_date, 1, 10) LIKE ?
+          AND substr(settlement_date, 1, 10) = ?
         ORDER BY offer_datetime DESC
         LIMIT 1
-    """, (duid, trading_date.strftime("%Y/%m/%d") + "%")).fetchone()
+    """, (duid, date_str)).fetchone()
 
     rebid_count = conn.execute(
         "SELECT COUNT(*) FROM rebid_event WHERE duid=? AND date(settlement_date)=?",
-        (duid, trading_date.isoformat())
+        (duid, date_str)
     ).fetchone()[0]
 
     strategic_rebid_count = conn.execute(
         "SELECT COUNT(*) FROM rebid_event WHERE duid=? AND date(settlement_date)=? AND classification='strategic'",
-        (duid, trading_date.isoformat())
+        (duid, date_str)
     ).fetchone()[0]
 
     conn.close()
@@ -135,7 +138,7 @@ def compute_unit_day(trading_date: date, duid: str) -> dict | None:
     )
 
     return {
-        "trading_date":            trading_date.isoformat(),
+        "trading_date":            date_str,
         "duid":                    duid,
         "region_id":               region,
         "total_energy_mwh":        round(total_energy_mwh, 2),
@@ -182,11 +185,12 @@ def compute_all_units(trading_date: date) -> int:
     return written
 
 
-def get_unit_timeline(duid: str, trading_date: date) -> list[dict]:
+def get_unit_timeline(duid: str, trading_date) -> list[dict]:
     """
     Return interval-by-interval data for a unit on a trading day.
     Used for the "what could I have done better" time-series chart.
     """
+    date_str = trading_date.isoformat() if hasattr(trading_date, 'isoformat') else str(trading_date)
     region = DUID_MAP.get(duid, {}).get("region", "NSW1")
     conn = get_connection()
     rows = conn.execute("""
@@ -217,9 +221,9 @@ def get_unit_timeline(duid: str, trading_date: date) -> list[dict]:
            AND substr(bpb.settlement_date,1,10) = substr(dus.settlement_date,1,10)
            AND bpb.bid_type = 'ENERGY'
         WHERE dus.duid = ?
-          AND substr(dus.settlement_date,1,10) LIKE ?
+          AND substr(dus.settlement_date,1,10) = ?
         ORDER BY dus.settlement_date
-    """, (region, duid, trading_date.strftime("%Y/%m/%d") + "%")).fetchall()
+    """, (region, duid, date_str)).fetchall()
     conn.close()
 
     result = []

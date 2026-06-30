@@ -1,8 +1,9 @@
 import { NavLink, Outlet } from 'react-router-dom';
 import {
   LayoutDashboard, Zap, BarChart3, RefreshCw,
-  TrendingUp, Settings, Activity,
+  TrendingUp, Settings, Activity, Info,
 } from 'lucide-react';
+import { api } from '../api/client';
 
 const NAV = [
   { to: '/',           icon: LayoutDashboard, label: 'Dashboard'       },
@@ -45,6 +46,18 @@ export default function Layout() {
         </div>
       </aside>
       <main className="main-content">
+        {api.isStatic && (
+          <div className="static-banner">
+            <Info size={15} />
+            <span>
+              <strong>Public demo</strong> — viewing pre-built data updated daily via GitHub Actions.
+              AI narratives and manual sync require the{' '}
+              <a href="https://github.com/Travis-coder712/brisbane-builder-guide#quick-start-mac--linux" target="_blank" rel="noreferrer">
+                local backend
+              </a>.
+            </span>
+          </div>
+        )}
         <Outlet />
       </main>
     </div>
